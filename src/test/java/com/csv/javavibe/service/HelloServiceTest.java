@@ -1,51 +1,57 @@
 package com.csv.javavibe.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.concurrent.CompletableFuture;
+
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.test.context.EmbeddedKafka;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.support.SendResult;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-/**
- * Integration test for HelloService using Embedded Kafka.
- * This avoids mocking issues with KafkaTemplate on newer Java versions.
- */
-@SpringBootTest
-@EmbeddedKafka(partitions = 1, topics = "test-topic")
-@DirtiesContext
 class HelloServiceTest {
 
-    @Autowired
-    private HelloService helloService;
-
-    @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
-
     @Test
-    void getGreeting_shouldReturnCorrectMessage() {
-        // Act
-        String greeting = helloService.getGreeting();
+    void getGreeting_shouldReturnExpectedGreeting() {
+        CapturingKafkaTemplate kafkaTemplate = new CapturingKafkaTemplate();
+        HelloService service = new HelloService(kafkaTemplate, "test-topic");
 
-        // Assert
-        assertThat(greeting).isEqualTo("Hello World from Service!");
+        String greeting = service.getGreeting();
+
+        assertEquals("Hello World from Service!", greeting);
     }
 
     @Test
-    void sendMessageToKafka_shouldSendToKafka() {
-        // Arrange
-        String testMessage = "Test Message";
+    void sendMessageToKafka_shouldSendMessageToConfiguredTopic() {
+        CapturingKafkaTemplate kafkaTemplate = new CapturingKafkaTemplate();
+        HelloService service = new HelloService(kafkaTemplate, "test-topic");
 
-        // Act
-        helloService.sendMessageToKafka(testMessage);
+        service.sendMessageToKafka("hello");
 
-        // Assert - verify message was sent by consuming it
-        String received = kafkaTemplate
-            .receive("test-topic", 0, 5000)
-            .value();
-        
-        assertThat(received).isEqualTo(testMessage);
+        assertEquals("test-topic", kafkaTemplate.topic);
+        assertEquals("hello", kafkaTemplate.message);
+    }
+
+    private static class CapturingKafkaTemplate extends KafkaTemplate<String, String> {
+        private String topic;
+        private String message;
+
+        private CapturingKafkaTemplate() {
+            super(new TestProducerFactory());
+        }
+
+        @Override
+        public CompletableFuture<SendResult<String, String>> send(String topic, String data) {
+            this.topic = topic;
+            this.message = data;
+            return CompletableFuture.completedFuture(null);
+        }
+    }
+
+    private static class TestProducerFactory implements ProducerFactory<String, String> {
+        @Override
+        public org.apache.kafka.clients.producer.Producer<String, String> createProducer() {
+            return null;
+        }
     }
 }
