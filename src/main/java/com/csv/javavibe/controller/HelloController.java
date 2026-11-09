@@ -2,8 +2,7 @@ package com.csv.javavibe.controller;
 
 import com.csv.javavibe.service.HelloService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 public class HelloController {
@@ -18,5 +17,11 @@ public class HelloController {
     @GetMapping("/hello-world")
     public String helloWorld() {
         return helloService.getGreeting();
+    }
+
+    @PostMapping("/send-message")
+    public String sendMessage(@RequestBody String message) {
+        helloService.sendMessageToKafka(message);
+        return "Message sent to Kafka successfully!";
     }
 }

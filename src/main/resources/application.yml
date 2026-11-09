@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: JavaVibeOllamaTest
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: java-vibe-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  # Custom topic configuration
+  topic:
+    name: test-topic
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework.kafka: DEBUG
+    com.csv.javavibe: DEBUG
