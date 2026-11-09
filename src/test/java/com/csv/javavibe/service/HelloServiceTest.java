@@ -6,6 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+
 /**
  * Unit test for HelloService.
  * We test the implementation directly as it has no external dependencies.
